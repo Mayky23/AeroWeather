@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AeroWeather</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="./img/plane.png">
+    <style>
+        :root {
+            --primary-blue: #0066cc;
+            --secondary-blue: #003366;
+            --accent-blue: #0099ff;
+            --light-blue: #e6f2ff;
+            --dark-gray: #333333;
+            --medium-gray: #666666;
+            --light-gray: #f5f5f5;
+            --white: #ffffff;
+            --warning-red: #d32f2f;
+            --success-green: #2e7d32;
+            --border-radius: 6px;
+            --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+
+            /* Light mode colors (default) */
+            --bg-color: #f5f5f5;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --header-bg: var(--primary-blue);
+            --header-text: #ffffff;
+            --input-bg: #ffffff;
+            --input-border: #cccccc;
+            --footer-bg: #f9f9f9;
+            --footer-text: var(--medium-gray);
+            --raw-data-bg: #f0f0f0;
+            --raw-data-text: #333333;
+            --border-color: #e0e0e0;
+        }
+
+        /* Dark mode colors */
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --header-bg: #0a1a2e;
+            --header-text: #ffffff;
+            --input-bg: #2d2d2d;
+            --input-border: #444444;
+            --footer-bg: #1a1a1a;
+            --footer-text: #aaaaaa;
+            --raw-data-bg: #2a2a2a;
+            --raw-data-text: #e0e0e0;
+            --border-color: #333333;
+            --light-blue: #1a2a3a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        header {
+            background-color: var(--header-bg);
+            color: var(--header-text);
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            transition: background-color 0.3s ease;
+        }
+
+        h1 {
+            font-family: 'Source Sans Pro', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: 2px solid white;
+            color: var(--header-text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .theme-toggle svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .search-section {
+            padding: 25px;
+            background-color: var(--light-blue);
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .search-description {
+            margin-bottom: 15px;
+            font-size: 15px;
+            color: var(--text-color);
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        #icaoInput {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 15px;
+            border: 1px solid var(--input-border);
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            transition: var(--transition);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+        }
+
+        #icaoInput:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+        }
+
+        .search-button {
+            background-color: var(--primary-blue);
+            color: var(--white);
+            border: none;
+            padding: 12px 25px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-button:hover {
+            background-color: var(--secondary-blue);
+        }
+
+        .search-button svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .api-info {
+            font-size: 14px;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0.8;
+        }
+
+        .api-info svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .status-indicators {
+            margin-top: 15px;
+        }
+
+        .error-message {
+            background-color: rgba(211, 47, 47, 0.1);
+            color: var(--warning-red);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin: 0 25px 25px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid rgba(211, 47, 47, 0.3);
+        }
+
+        .error-message svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+            color: var(--primary-blue);
+        }
+
+        .loading-spinner {
+            border: 4px solid rgba(0, 102, 204, 0.2);
+            border-top: 4px solid var(--primary-blue);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .data-section {
+            padding: 0 25px 25px;
+        }
+
+        .data-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+        }
+
+        .data-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .data-card h2 {
+            font-family: 'Source Sans Pro', sans-serif;
+            font-size: 20px;
+            color: var(--primary-blue);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .data-card h2 svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        .data-card h3 {
+            font-size: 16px;
+            color: var(--primary-blue);
+            margin: 15px 0 10px;
+        }
+
+        .raw-data {
+            font-family: 'Roboto Mono', monospace;
+            background-color: var(--raw-data-bg);
+            color: var(--raw-data-text);
+            padding: 12px;
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            overflow-x: auto;
+            margin-bottom: 15px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            margin-bottom: 8px;
+        }
+
+        .info-label {
+            font-weight: 500;
+            min-width: 140px;
+            color: var(--primary-blue);
+        }
+
+        .weather-value {
+            font-weight: 500;
+        }
+
+        .notam-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .notam-id {
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+
+        .notam-validity {
+            font-size: 13px;
+            color: var(--medium-gray);
+            margin: 5px 0;
+        }
+
+        .notam-message {
+            line-height: 1.5;
+        }
+
+        .footer-note {
+            font-size: 13px;
+            color: var(--footer-text);
+            padding: 20px 25px;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--footer-bg);
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .last-updated {
+            font-size: 12px;
+            color: var(--medium-gray);
+            text-align: right;
+            margin-top: 5px;
+        }
+
+        /* Weather condition indicators */
+        .weather-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            background-color: rgba(0, 102, 204, 0.1);
+            color: var(--primary-blue);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                border-radius: 0;
+            }
+            
+            .search-container {
+                flex-direction: column;
+            }
+            
+            #icaoInput {
+                width: 100%;
+            }
+            
+            .search-button {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .theme-toggle {
+                position: static;
+                margin-top: 15px;
+                justify-content: center;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .data-section {
+                padding: 0 15px 15px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .info-item {
+                flex-direction: column;
+            }
+            
+            .info-label {
+                margin-bottom: 3px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <button class="theme-toggle" id="themeToggle">
+                <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1-8.313-12.454z"/>
+                </svg>
+                <span id="themeText">Modo oscuro</span>
+            </button>
+
+            <h1>AeroWeather</h1>
+            <p class="subtitle">Información meteorológica aeroportuaria en tiempo real para simuladores de aviación</p>
+        </header>
+        
+        <div class="search-section">
+            <p class="search-description">Introduce el código ICAO (4 letras) o IATA (3 letras) de cualquier aeropuerto.</p>
+            
+            <div class="search-container">
+                <input type="text" id="icaoInput" placeholder="Ejemplo: LEMD, MAD, KJFK" autocomplete="off" autocapitalize="characters">
+                <button class="search-button" onclick="fetchData()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                    </svg>
+                    Buscar
+                </button>
+            </div>
+            
+            
+            <div class="status-indicators">
+                <div class="error-message" id="errorContainer">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                    </svg>
+                    <span id="errorText"></span>
+                </div>
+                
+                <div class="loading" id="loadingIndicator">
+                    <div class="loading-spinner"></div>
+                    <p>Obteniendo datos meteorológicos...</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="data-section" id="resultsContainer">
+            <!-- METAR Section -->
+            <div class="data-card">
+                <h2>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/>
+                    </svg>
+                    METAR
+                </h2>
+                <h3>Reporte en bruto</h3>
+                <div class="raw-data">LEBL 041538Z 28012KT 178V248 CAVOK 38/22 Q1828 NOSTG</div>
+                
+                <h3>Información decodificada</h3>
+                <div class="info-grid">
+                    <div class="info-item"><span class="info-label">Viento:</span> <span class="weather-value">280° a 12KT (variable entre 178° y 248°)</span></div>
+                    <div class="info-item"><span class="info-label">Visibilidad:</span> <span class="weather-value">10 km o más (CAVOK)</span></div>
+                    <div class="info-item"><span class="info-label">Temperatura:</span> <span class="weather-value">38°C</span></div>
+                    <div class="info-item"><span class="info-label">Punto de rocío:</span> <span class="weather-value">22°C</span></div>
+                    <div class="info-item"><span class="info-label">Presión QNH:</span> <span class="weather-value">1028 hPa (Q1828)</span></div>
+                    <div class="info-item"><span class="info-label">Nubes:</span> <span class="weather-value">Cielo despejado (CAVOK)</span></div>
+                    <div class="info-item"><span class="info-label">Tendencia:</span> <span class="weather-indicator">NOSTG (Sin cambio significativo)</span></div>
+                </div>
+                <p class="last-updated">Actualizado: hace 34 minutos</p>
+            </div>
+            
+            <!-- TAF Section -->
+            <div class="data-card">
+                <h2>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+                    </svg>
+                    TAF
+                </h2>
+                <h3>Reporte en bruto</h3>
+                <div class="raw-data" id="tafRaw">LEMD 041100Z 0412/0518 28010KT 9999 FEW030 TX25/0416Z TN14/0505Z</div>
+                
+                <h3>Pronóstico decodificado</h3>
+                <div class="info-grid">
+                    <div class="info-item"><span class="info-label">Viento:</span> <span class="weather-value">280° a 10KT</span></div>
+                    <div class="info-item"><span class="info-label">Visibilidad:</span> <span class="weather-value">9999m</span></div>
+                    <div class="info-item"><span class="info-label">Nubes:</span> <span class="weather-value">FEW030</span></div>
+                    <div class="info-item"><span class="info-label">Temp. máxima:</span> <span class="weather-value">25°C (16Z)</span></div>
+                    <div class="info-item"><span class="info-label">Temp. mínima:</span> <span class="weather-value">14°C (05Z)</span></div>
+                </div>
+                <p class="last-updated">Actualizado: <span id="tafTime">hace 15 minutos</span></p>
+            </div>
+            
+            <!-- Airport Information -->
+            <div class="data-card">
+                <h2>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                    </svg>
+                    Información del Aeropuerto
+                </h2>
+                <div class="info-grid">
+                    <div class="info-item"><span class="info-label">Ubicación:</span> Barcelona, España</div>
+                    <div class="info-item"><span class="info-label">Elevación:</span> 4m (13ft)</div>
+                    <div class="info-item"><span class="info-label">Zona horaria:</span> UTC+1 (CET)</div>
+                    <div class="info-item"><span class="info-label">Tipo:</span> Aeropuerto internacional</div>
+                    <div class="info-item"><span class="info-label">Sitio web:</span> <a href="https://www.aena.es" target="_blank">aena.es</a></div>
+                </div>
+            </div>
+            
+            <!-- NOTAM Section -->
+            <div class="data-card">
+                <h2>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+                    </svg>
+                    NOTAMs
+                </h2>
+                <div id="notamsContainer">
+                    <p>No hay NOTAMs activos para este aeropuerto.</p>
+                </div>
+                <p class="last-updated">Actualizado: <span id="notamTime">hace 10 minutos</span></p>
+            </div>
+            
+            <!-- Runways and Frequencies -->
+            <div class="data-card">
+                <h2>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                    </svg>
+                    Pistas y frecuencias
+                </h2>
+                <div class="info-grid">
+                    <div>
+                        <h3>Pistas</h3>
+                        <div class="info-item">07L/25R - 3,352m × 45m</div>
+                        <div class="info-item">07R/25L - 2,660m × 45m</div>
+                    </div>
+                    <div>
+                        <h3>Frecuencias</h3>
+                        <div class="info-item">TORRE - 118.300 MHz</div>
+                        <div class="info-item">APROXIMACIÓN - 119.100 MHz</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-note">
+            <p><strong>Nota:</strong> Los datos meteorológicos pueden tener un retraso de 15-30 minutos. Algunos aeropuertos pequeños pueden tener información limitada.</p>
+            <p><strong>Fuentes de datos:</strong> AviationWeather, OpenSky, FAA, OurAirports - Actualizados cada 10-15 minutos</p>
+            <p><strong>Información solo para fines de simulación aérea - NO usar en operaciones reales</strong></p>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration with keys
+        const API_CONFIG = {
+            AVWX: {
+                key: 'P-E4IUolvPHgkOX88CJCgZD7zTI5HnldDHtMBg6BdEY',
+                endpoints: {
+                    metar: 'https://avwx.rest/api/metar/{icao}',
+                    taf: 'https://avwx.rest/api/taf/{icao}',
+                    station: 'https://avwx.rest/api/station/{icao}',
+                    decode: 'https://avwx.rest/api/metar/decode'
+                }
+            },
+            AIRPORT_DB: {
+                key: '29b775cbbc83128a286307e85338a3438be22cd48dacaca0eba0193592d1ebf8b2a0756118fb7865247dee3152a3c6c2',
+                url: 'https://airportdb.io/api/v1/airport/{icao}'
+            },
+            AVIATION_API: 'https://api.aviationapi.com/v1/'
+        };
+
+        // State variables
+        let currentIcao = '';
+        let lastData = null;
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize theme
+            initTheme();
+            
+            // Add event listener for Enter key
+            document.getElementById('icaoInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    fetchData();
+                }
+            });
+            
+            // Focus on input field
+            document.getElementById('icaoInput').focus();
+        });
+
+        // Theme toggle functionality
+        function initTheme() {
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+            
+            // Check for saved theme preference or use preferred color scheme
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                updateThemeButton(savedTheme, themeIcon, themeText);
+            } else if (prefersDark) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                updateThemeButton('dark', themeIcon, themeText);
+            }
+            
+            // Add click event to toggle button
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateThemeButton(newTheme, themeIcon, themeText);
+            });
+        }
+        
+        function updateThemeButton(theme, icon, text) {
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/>';
+                text.textContent = 'Modo claro';
+            } else {
+                icon.innerHTML = '<path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1-8.313-12.454z"/>';
+                text.textContent = 'Modo oscuro';
+            }
+        }
+
+        // Main data fetching function
+        async function fetchData() {
+            const icao = document.getElementById('icaoInput').value.trim().toUpperCase();
+            if (!icao || (icao.length !== 3 && icao.length !== 4)) {
+                showError('Por favor ingresa un código ICAO (4 letras) o IATA (3 letras) válido');
+                return;
+            }
+            
+            currentIcao = icao;
+            
+            showLoading();
+            hideError();
+            
+            try {
+                const data = await getCompleteAirportInfo(icao);
+                lastData = data;
+                renderData(data);
+            } catch (error) {
+                showError('Error al obtener datos: ' + error.message);
+                console.error(error);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Get all airport information
+        async function getCompleteAirportInfo(icao) {
+            const [airportInfo, metar, taf, notams, frequencies] = await Promise.all([
+                getAirportInfo(icao),
+                getMetar(icao),
+                getTaf(icao),
+                getNotams(icao),
+                getRadioFrequencies(icao)
+            ]);
+            
+            return {
+                airportInfo,
+                metar,
+                taf,
+                notams,
+                frequencies,
+                lastUpdated: new Date().toISOString()
+            };
+        }
+
+        // Get airport info from AirportDB
+        async function getAirportInfo(icao) {
+            try {
+                const url = API_CONFIG.AIRPORT_DB.url.replace('{icao}', icao);
+                const response = await fetchWithTimeout(`${url}?apiToken=${API_CONFIG.AIRPORT_DB.key}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Get additional station info from AVWX
+                    try {
+                        const avwxUrl = API_CONFIG.AVWX.endpoints.station.replace('{icao}', icao);
+                        const avwxResponse = await fetchWithTimeout(avwxUrl, {
+                            headers: { 'Authorization': `Bearer ${API_CONFIG.AVWX.key}` }
+                        });
+                        
+                        if (avwxResponse.ok) {
+                            const stationInfo = await avwxResponse.json();
+                            data.runways = stationInfo.runways || [];
+                        }
+                    } catch (e) {
+                        console.log('Could not fetch additional station info');
+                    }
+                    
+                    return data;
+                }
+                
+                throw new Error('Could not fetch airport information');
+            } catch (error) {
+                console.error('Error in getAirportInfo:', error);
+                return { error: error.message };
+            }
+        }
+
+        // Get METAR data
+        async function getMetar(icao) {
+            try {
+                // Try AVWX first
+                const url = API_CONFIG.AVWX.endpoints.metar.replace('{icao}', icao);
+                const response = await fetchWithTimeout(url, {
+                    headers: { 
+                        'Authorization': `Bearer ${API_CONFIG.AVWX.key}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const metarData = await response.json();
+                    
+                    if (!metarData || !metarData.raw) {
+                        throw new Error('Invalid METAR data received');
+                    }
+                    
+                    try {
+                        const decodeResponse = await fetchWithTimeout(API_CONFIG.AVWX.endpoints.decode, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${API_CONFIG.AVWX.key}`
+                            },
+                            body: JSON.stringify({ metar: metarData.raw })
+                        });
+                        
+                        if (decodeResponse.ok) {
+                            const decoded = await decodeResponse.json();
+                            return {
+                                raw: metarData.raw,
+                                decoded: decoded,
+                                timestamp: metarData.time.dt || new Date().toISOString()
+                            };
+                        }
+                    } catch (decodeError) {
+                        console.warn('METAR decode failed, returning raw only:', decodeError);
+                    }
+                    
+                    return { 
+                        raw: metarData.raw,
+                        timestamp: metarData.time?.dt || new Date().toISOString()
+                    };
+                }
+                
+                // Fallback to VATSIM if AVWX fails
+                const backupResponse = await fetchWithTimeout(`https://metar.vatsim.net/${icao}`);
+                if (backupResponse.ok) {
+                    const rawMetar = await backupResponse.text();
+                    return { 
+                        raw: rawMetar,
+                        timestamp: new Date().toISOString()
+                    };
+                }
+                
+                throw new Error('Could not fetch METAR from any source');
+            } catch (error) {
+                console.error('Error in getMetar:', error);
+                return { error: error.message };
+            }
+        }
+
+        // Get TAF data
+        async function getTaf(icao) {
+            try {
+                const url = API_CONFIG.AVWX.endpoints.taf.replace('{icao}', icao);
+                const response = await fetchWithTimeout(url, {
+                    headers: { 'Authorization': `Bearer ${API_CONFIG.AVWX.key}` }
+                });
+                
+                if (response.ok) {
+                    const tafData = await response.json();
+                    return {
+                        raw: tafData.raw,
+                        forecast: tafData.forecast,
+                        timestamp: tafData.time.dt || new Date().toISOString()
+                    };
+                }
+                
+                throw new Error('Could not fetch TAF');
+            } catch (error) {
+                console.error('Error in getTaf:', error);
+                return { error: error.message };
+            }
+        }
+
+        // Get NOTAMs
+        async function getNotams(icao) {
+            try {
+                const url = `${API_CONFIG.AVIATION_API}notams?apt=${icao}`;
+                const response = await fetchWithTimeout(url);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.length > 0) return {
+                        notams: data,
+                        timestamp: new Date().toISOString()
+                    };
+                    return { 
+                        error: 'No active NOTAMs',
+                        timestamp: new Date().toISOString()
+                    };
+                }
+                
+                throw new Error('NOTAM service unavailable');
+            } catch (error) {
+                console.error('Error in getNotams:', error);
+                return { 
+                    error: error.message,
+                    timestamp: new Date().toISOString()
+                };
+            }
+        }
+
+        // Get radio frequencies from multiple sources
+        async function getRadioFrequencies(icao) {
+            try {
+                // Try AviationAPI first (most reliable for frequencies)
+                const aviationApiUrl = `${API_CONFIG.AVIATION_API}frequencies?apt=${icao}`;
+                const aviationApiResponse = await fetchWithTimeout(aviationApiUrl);
+                
+                if (aviationApiResponse.ok) {
+                    const data = await aviationApiResponse.json();
+                    if (data[icao] && data[icao].length > 0) {
+                        return data[icao].map(f => ({
+                            type: f.type || 'UNKNOWN',
+                            frequency: f.frequency_mhz || 'N/A',
+                            description: f.description || f.type || 'Frequency'
+                        }));
+                    }
+                }
+
+                // Try AirportDB as fallback
+                const airportDbUrl = API_CONFIG.AIRPORT_DB.url.replace('{icao}', icao);
+                const airportDbResponse = await fetchWithTimeout(`${airportDbUrl}?apiToken=${API_CONFIG.AIRPORT_DB.key}`);
+                
+                if (airportDbResponse.ok) {
+                    const data = await airportDbResponse.json();
+                    if (data.frequencies && data.frequencies.length > 0) {
+                        return data.frequencies.map(f => ({
+                            type: f.type || 'UNKNOWN',
+                            frequency: f.frequency_mhz || 'N/A',
+                            description: f.description || f.type || 'Frequency'
+                        }));
+                    }
+                }
+
+                // Try AVWX station info as last resort
+                const avwxUrl = API_CONFIG.AVWX.endpoints.station.replace('{icao}', icao);
+                const avwxResponse = await fetchWithTimeout(avwxUrl, {
+                    headers: { 'Authorization': `Bearer ${API_CONFIG.AVWX.key}` }
+                });
+                
+                if (avwxResponse.ok) {
+                    const data = await avwxResponse.json();
+                    if (data.frequencies && data.frequencies.length > 0) {
+                        return data.frequencies.map(f => ({
+                            type: f.type || 'UNKNOWN',
+                            frequency: f.frequency || 'N/A',
+                            description: f.description || f.name || f.type || 'Frequency'
+                        }));
+                    }
+                }
+
+                return [];
+            } catch (error) {
+                console.error('Error getting radio frequencies:', error);
+                return [];
+            }
+        }
+
+        // Render all data to the UI
+        function renderData(data) {
+            const container = document.getElementById('resultsContainer');
+            
+            // Format timestamps
+            const formatTimeAgo = (timestamp) => {
+                if (!timestamp) return 'hace un momento';
+                
+                const now = new Date();
+                const updated = new Date(timestamp);
+                const diffMinutes = Math.floor((now - updated) / (1000 * 60));
+                
+                if (diffMinutes < 1) return 'hace un momento';
+                if (diffMinutes < 60) return `hace ${diffMinutes} minuto${diffMinutes !== 1 ? 's' : ''}`;
+                
+                const diffHours = Math.floor(diffMinutes / 60);
+                if (diffHours < 24) return `hace ${diffHours} hora${diffHours !== 1 ? 's' : ''}`;
+                
+                const diffDays = Math.floor(diffHours / 24);
+                return `hace ${diffDays} día${diffDays !== 1 ? 's' : ''}`;
+            };
+            
+            // 1. METAR Data
+            let metarHTML = `
+                <div class="data-card">
+                    <h2>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/>
+                        </svg>
+                        METAR
+                    </h2>
+                    <h3>Reporte en bruto</h3>
+                    <div class="raw-data">${data.metar?.raw || 'No disponible'}</div>
+            `;
+            
+            if (data.metar?.decoded) {
+                const m = data.metar.decoded;
+                metarHTML += `
+                    <h3>Información decodificada</h3>
+                    <div class="info-grid">
+                        <div class="info-item"><span class="info-label">Viento:</span> <span class="weather-value">${m.wind_direction?.repr || 'VRB'}° a ${m.wind_speed?.repr || '0'}KT${m.wind_gust ? ` (ráfagas ${m.wind_gust.repr}KT)` : ''}${m.wind_variable_direction ? ` (variable entre ${m.wind_variable_direction[0].repr}° y ${m.wind_variable_direction[1].repr}°)` : ''}</span></div>
+                        <div class="info-item"><span class="info-label">Visibilidad:</span> <span class="weather-value">${m.visibility?.repr || m.visibility?.value || 'N/A'}${m.visibility?.unit === 'm' ? 'm' : ''} ${m.clouds?.length === 0 && m.visibility?.value >= 10000 ? '(CAVOK)' : ''}</span></div>
+                        <div class="info-item"><span class="info-label">Temperatura:</span> <span class="weather-value">${m.temperature?.repr || 'N/A'}°C</span></div>
+                        <div class="info-item"><span class="info-label">Punto de rocío:</span> <span class="weather-value">${m.dewpoint?.repr || 'N/A'}°C</span></div>
+                        <div class="info-item"><span class="info-label">Presión QNH:</span> <span class="weather-value">${m.altimeter?.value || 'N/A'} hPa (${m.altimeter?.repr || 'N/A'})</span></div>
+                        <div class="info-item"><span class="info-label">Nubes:</span> <span class="weather-value">${m.clouds?.length > 0 ? m.clouds.map(c => `${c.repr} a ${c.altitude || 0} ft`).join(', ') : 'Cielo despejado (CAVOK)'}</span></div>
+                        <div class="info-item"><span class="info-label">Tendencia:</span> ${m.trend ? `<span class="weather-indicator">${m.trend}</span>` : 'Ninguna'}</div>
+                    </div>
+                `;
+            } else {
+                // Fallback display when decoded data is not available
+                const rawMetar = data.metar?.raw || '';
+                metarHTML += `
+                    <h3>Información decodificada</h3>
+                    <div class="info-grid">
+                        <div class="info-item"><span class="info-label">Viento:</span> <span class="weather-value">${extractWind(rawMetar)}</span></div>
+                        <div class="info-item"><span class="info-label">Visibilidad:</span> <span class="weather-value">${extractVisibility(rawMetar)}</span></div>
+                        <div class="info-item"><span class="info-label">Temperatura:</span> <span class="weather-value">${extractTemperature(rawMetar)}</span></div>
+                        <div class="info-item"><span class="info-label">Punto de rocío:</span> <span class="weather-value">${extractDewpoint(rawMetar)}</span></div>
+                        <div class="info-item"><span class="info-label">Presión QNH:</span> <span class="weather-value">${extractPressure(rawMetar)}</span></div>
+                        <div class="info-item"><span class="info-label">Nubes:</span> <span class="weather-value">${extractClouds(rawMetar)}</span></div>
+                        <div class="info-item"><span class="info-label">Tendencia:</span> <span class="weather-indicator">${extractTrend(rawMetar)}</span></div>
+                    </div>
+                `;
+            }
+            
+            metarHTML += `
+                <p class="last-updated">Actualizado: ${formatTimeAgo(data.metar?.timestamp)}</p>
+            </div>`;
+            
+            // 2. TAF Data
+            let tafHTML = `
+                <div class="data-card">
+                    <h2>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+                        </svg>
+                        TAF
+                    </h2>
+                    <h3>Reporte en bruto</h3>
+                    <div class="raw-data">${data.taf?.raw || 'No disponible'}</div>
+            `;
+            
+            if (data.taf?.forecast) {
+                tafHTML += `<h3>Pronóstico decodificado</h3><div class="info-grid">`;
+                
+                data.taf.forecast.forEach((period, idx) => {
+                    const startTime = period.start_time?.dt ? new Date(period.start_time.dt).toLocaleTimeString() : 'N/A';
+                    const endTime = period.end_time?.dt ? new Date(period.end_time.dt).toLocaleTimeString() : 'N/A';
+                    
+                    tafHTML += `
+                        <div class="info-item"><span class="info-label">Período ${idx + 1}:</span> 
+                            <div style="margin-left: 10px;">
+                                <div><strong>Horario:</strong> ${startTime} - ${endTime}</div>
+                                <div><strong>Viento:</strong> ${period.wind_direction?.repr || 'VRB'}° a ${period.wind_speed?.repr || '0'}KT${period.wind_gust ? ` (ráfagas ${period.wind_gust.repr}KT)` : ''}</div>
+                                <div><strong>Visibilidad:</strong> ${period.visibility?.repr || 'N/A'}</div>
+                                <div><strong>Nubes:</strong> ${period.clouds?.map(c => `${c.repr} a ${c.altitude || 0} ft`).join(', ') || 'Despejado'}</div>
+                                ${period.wx_codes ? `<div><strong>Condiciones:</strong> ${period.wx_codes.map(w => `<span class="weather-indicator">${w.value}</span>`).join(' ')}</div>` : ''}
+                                ${period.probability ? `<div><strong>Probabilidad:</strong> ${period.probability}%</div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                tafHTML += `</div>`;
+            }
+            
+            tafHTML += `
+                <p class="last-updated">Actualizado: ${formatTimeAgo(data.taf?.timestamp)}</p>
+            </div>`;
+            
+            // 3. Airport Information
+            let airportHTML = `
+                <div class="data-card">
+                    <h2>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                        </svg>
+                        Información del Aeropuerto
+                    </h2>
+                    <div class="info-grid">
+            `;
+            
+            if (data.airportInfo && !data.airportInfo.error) {
+                const airport = data.airportInfo;
+                let country = 'N/A';
+                if (airport.country) {
+                    country = typeof airport.country === 'object' ? airport.country.name : airport.country;
+                }
+                
+                // Format elevation
+                let elevation = 'N/A';
+                if (airport.elevation_ft) {
+                    elevation = `${airport.elevation_ft} ft (${Math.round(airport.elevation_ft * 0.3048)}m)`;
+                }
+                
+                // Format timezone
+                let timezone = 'N/A';
+                if (airport.timezone) {
+                    timezone = airport.timezone.replace(/_/g, ' ');
+                    const offset = new Date().getTimezoneOffset() / -60;
+                    timezone += ` (UTC${offset >= 0 ? '+' : ''}${offset})`;
+                }
+                
+                airportHTML += `
+                    <div class="info-item"><span class="info-label">Nombre:</span> ${airport.name || 'N/A'}</div>
+                    <div class="info-item"><span class="info-label">Ubicación:</span> ${airport.municipality || 'N/A'}, ${country}</div>
+                    <div class="info-item"><span class="info-label">Elevación:</span> ${elevation}</div>
+                    <div class="info-item"><span class="info-label">Zona horaria:</span> ${timezone}</div>
+                    <div class="info-item"><span class="info-label">Tipo:</span> ${airport.type ? airport.type.replace(/_/g, ' ') : 'N/A'}</div>
+                    ${airport.website ? `<div class="info-item"><span class="info-label">Sitio web:</span> <a href="${airport.website}" target="_blank">${airport.website}</a></div>` : ''}
+                    ${airport.phone ? `<div class="info-item"><span class="info-label">Teléfono:</span> ${airport.phone}</div>` : ''}
+                `;
+            } else {
+                airportHTML += `<div class="info-item">Información no disponible</div>`;
+            }
+            
+            airportHTML += `</div></div>`;
+            
+            // 4. NOTAMs
+            let notamsHTML = `
+                <div class="data-card">
+                    <h2>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+                        </svg>
+                        NOTAMs
+                    </h2>
+            `;
+            
+            if (data.notams && !data.notams.error && data.notams.notams && data.notams.notams.length > 0) {
+                notamsHTML += `<div style="max-height: 300px; overflow-y: auto;">`;
+                
+                data.notams.notams.slice(0, 5).forEach(notam => {
+                    const startTime = notam.starttime ? new Date(notam.starttime).toLocaleString() : 'N/A';
+                    const endTime = notam.endtime ? new Date(notam.endtime).toLocaleString() : 'N/A';
+                    
+                    notamsHTML += `
+                        <div class="notam-item">
+                            <div class="notam-id">${notam.notam_id || 'NOTAM'}</div>
+                            <div class="notam-validity">Válido: ${startTime} - ${endTime}</div>
+                            <div class="notam-message">${notam.message || 'No hay detalles disponibles'}</div>
+                        </div>
+                    `;
+                });
+                
+                notamsHTML += `</div>`;
+            } else {
+                notamsHTML += `<p>No hay NOTAMs activos para este aeropuerto.</p>`;
+            }
+            
+            notamsHTML += `
+                <p class="last-updated">Actualizado: ${formatTimeAgo(data.notams?.timestamp)}</p>
+            </div>`;
+            
+            // 5. Runways and Frequencies
+            let runwaysHTML = `
+                <div class="data-card">
+                    <h2>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                        </svg>
+                        Pistas y frecuencias
+                    </h2>
+                    <div class="info-grid">
+                        <div>
+                            <h3>Pistas</h3>
+            `;
+            
+            if (data.airportInfo?.runways && data.airportInfo.runways.length > 0) {
+                data.airportInfo.runways.slice(0, 3).forEach(rwy => {
+                    const lengthMeters = Math.round(rwy.length_ft * 0.3048);
+                    const widthMeters = Math.round(rwy.width_ft * 0.3048);
+                    
+                    runwaysHTML += `
+                        <div class="info-item">
+                            ${rwy.ident1}/${rwy.ident2} - 
+                            ${rwy.length_ft}ft × ${rwy.width_ft}ft 
+                            (${lengthMeters}m × ${widthMeters}m)
+                            <br>
+                            <small>Superficie: ${rwy.surface || 'N/A'}</small>
+                        </div>
+                    `;
+                });
+            } else {
+                runwaysHTML += `<div class="info-item">Datos no disponibles</div>`;
+            }
+            
+            runwaysHTML += `
+                        </div>
+                        <div>
+                            <h3>Frecuencias</h3>
+            `;
+            
+            if (data.frequencies && data.frequencies.length > 0) {
+                data.frequencies.slice(0, 5).forEach(freq => {
+                    runwaysHTML += `
+                        <div class="info-item">
+                            <strong>${freq.description || freq.type}:</strong> 
+                            ${parseFloat(freq.frequency).toFixed(3)} MHz
+                        </div>
+                    `;
+                });
+            } else {
+                runwaysHTML += `<div class="info-item">Datos no disponibles</div>`;
+            }
+            
+            runwaysHTML += `
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Combine all sections
+            container.innerHTML = metarHTML + tafHTML + airportHTML + notamsHTML + runwaysHTML;
+        }
+
+        // Helper functions for raw METAR parsing
+        function extractWind(metar) {
+            if (!metar) return 'N/A';
+            const windMatch = metar.match(/(\d{3}|VRB)(\d{2,3})(G\d{2,3})?(KT|MPS)/);
+            if (!windMatch) return 'N/A';
+            
+            let windStr = `${windMatch[1]}° a ${windMatch[2]}KT`;
+            if (windMatch[3]) windStr += ` (ráfagas ${windMatch[3].substring(1)}KT)`;
+            
+            // Check for variable wind
+            const varMatch = metar.match(/(\d{3})V(\d{3})/);
+            if (varMatch) windStr += ` (variable entre ${varMatch[1]}° y ${varMatch[2]}°)`;
+            
+            return windStr;
+        }
+        
+        function extractVisibility(metar) {
+            if (!metar) return 'N/A';
+            if (metar.includes('CAVOK')) return '10 km o más (CAVOK)';
+            
+            const visMatch = metar.match(/(\d{4})(NDV)?/);
+            if (!visMatch) return 'N/A';
+            
+            return `${visMatch[1]} metros`;
+        }
+        
+        function extractTemperature(metar) {
+            if (!metar) return 'N/A';
+            const tempMatch = metar.match(/(M?\d{2})\/(M?\d{2})/);
+            if (!tempMatch) return 'N/A';
+            
+            return tempMatch[1].replace('M', '-') + '°C';
+        }
+        
+        function extractDewpoint(metar) {
+            if (!metar) return 'N/A';
+            const tempMatch = metar.match(/(M?\d{2})\/(M?\d{2})/);
+            if (!tempMatch) return 'N/A';
+            
+            return tempMatch[2].replace('M', '-') + '°C';
+        }
+        
+        function extractPressure(metar) {
+            if (!metar) return 'N/A';
+            const qnhMatch = metar.match(/Q(\d{4})/);
+            if (!qnhMatch) return 'N/A';
+            
+            return `${qnhMatch[1]} hPa (Q${qnhMatch[1]})`;
+        }
+        
+        function extractClouds(metar) {
+            if (!metar) return 'N/A';
+            if (metar.includes('CAVOK')) return 'Cielo despejado (CAVOK)';
+            
+            const cloudMatches = metar.match(/(FEW|SCT|BKN|OVC)(\d{3})/g);
+            if (!cloudMatches || cloudMatches.length === 0) return 'Despejado';
+            
+            return cloudMatches.map(c => `${c.substring(0,3)} a ${c.substring(3)}00 ft`).join(', ');
+        }
+        
+        function extractTrend(metar) {
+            if (!metar) return 'N/A';
+            if (metar.includes('NOSIG')) return 'NOSIG (Sin cambio significativo)';
+            if (metar.includes('BECMG')) return 'BECMG (Cambio gradual esperado)';
+            if (metar.includes('TEMPO')) return 'TEMPO (Variaciones temporales)';
+            
+            return 'NOSTG (Sin cambio significativo)';
+        }
+
+        // Helper functions
+        function showLoading() {
+            document.getElementById('loadingIndicator').style.display = 'block';
+            document.getElementById('resultsContainer').style.opacity = '0.5';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingIndicator').style.display = 'none';
+            document.getElementById('resultsContainer').style.opacity = '1';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorContainer');
+            const errorText = document.getElementById('errorText');
+            errorDiv.style.display = 'flex';
+            errorText.textContent = message;
+        }
+
+        function hideError() {
+            document.getElementById('errorContainer').style.display = 'none';
+        }
+
+        async function fetchWithTimeout(url, options = {}, timeout = 10000) {
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeout);
+            
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    signal: controller.signal
+                });
+                clearTimeout(id);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return response;
+            } catch (error) {
+                clearTimeout(id);
+                throw error;
+            }
+        }
+    </script>
+</body>
+</html>
